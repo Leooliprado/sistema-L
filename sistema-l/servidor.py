@@ -1,73 +1,98 @@
 import os
 import subprocess
+import time
 from rich.console import Console
-from rich.text import Text
 from rich.panel import Panel
 from rich.prompt import Prompt
-import time
-
+from rich.spinner import Spinner
+from rich.live import Live
 
 console = Console()
 
-def iniciar_sistema():
+# ======================
+# FUNÇÕES DE APOIO
+# ======================
 
-    def exibir_menu():
-        # Texto do menu
-        menu_texto = """
-        [bold]Escolha uma opção:[/]
-        1. Iniciar Servidor
-        2. Parar Servidor
-        3. Ver Status do Servidor
-        4. Sair
-        """
-        
-        # Exibir o menu dentro de um painel amarelo
-        console.print(
-            Panel(
-                menu_texto,
-                style="bold black on yellow",  # Texto preto com fundo amarelo
-                title="[bold #FFD700]Menu do Servidor[/]",  # Título em dourado
-            )
+def limpar_tela():
+    os.system("cls" if os.name == "nt" else "clear")
+
+def animacao(texto, tempo=1):
+    spinner = Spinner("dots", text=f"[bold yellow]{texto}[/]", style="yellow")
+    with Live(spinner, refresh_per_second=12, console=console):
+        time.sleep(tempo)
+        limpar_tela()
+
+# ======================
+# FUNÇÕES DO MENU
+# ======================
+
+def exibir_menu():
+    menu = """
+[bold]1[/] - Iniciar Servidor
+[bold]2[/] - Parar Servidor
+[bold]3[/] - Ver Status
+[bold]4[/] - Sair
+"""
+    console.print(
+        Panel(
+            menu.strip(),
+            style="bold black on yellow",
+            title="[bold #FFD700]Menu Principal[/]"
         )
+    )
 
-        print("\n")
+def iniciar_servidor():
+    animacao("Iniciando servidor...")
+    try:
+        # Exemplo: Executar um comando para iniciar o servidor
+        console.print("[bold green]✔ Servidor iniciado com sucesso![/]")
+    except Exception as e:
+        console.print(f"[bold red]Erro ao iniciar o servidor: {e}[/]")
 
-    def iniciar_servidor():
-        console.print("\n[bold #FFD700]Iniciando o servidor...[/]")  # Dourado
-        try:
-            # Exemplo: Executar um comando para iniciar o servidor
-            console.print("[bold #32CD32]Servidor iniciado com sucesso![/]")  # Verde limão
-        except subprocess.CalledProcessError as e:
-            console.print(f"[bold red]Erro ao iniciar o servidor: {e}[/]")
+def parar_servidor():
+    console.print(
+        Panel(
+            "[bold black]Deseja realmente parar o servidor?[/]\n\n"
+            "[bold black]S[/] - Sim\n"
+            "[bold black]N[/] - Não",
+            title="[bold red]Confirmação[/]",
+            style="bold black on yellow"
+        )
+    )
 
-    def parar_servidor():
-        console.print("\n[bold #FFA500]Parando o servidor...[/]")  # Laranja
-        try:
-            # Exemplo: Executar um comando para parar o servidor
-            console.print("[bold #FF4500]Servidor parado com sucesso![/]")  # Vermelho laranja
-        except subprocess.CalledProcessError as e:
-            console.print(f"[bold red]Erro ao parar o servidor: {e}[/]")
+    resposta = Prompt.ask("Escolha", choices=["s", "n"])
 
-    def verificar_status():
-        console.print("\n[bold #1E90FF]Verificando status do servidor...[/]")  # Azul claro
-        try:
-            # Exemplo: Executar um comando para verificar o status
-            console.print("[bold #00CED1]Status: Servidor ativo![/]")  # Azul turquesa
-        except subprocess.CalledProcessError as e:
-            console.print(f"[bold red]Erro ao verificar status: {e}[/]")
+    if resposta.lower() == "n":
+        console.print("[bold cyan]❌ Operação cancelada.[/]")
+        time.sleep(1)
+        return
 
-    # Loop principal
+    animacao("Parando servidor...")
+    try:
+        console.print("[bold red]✔ Servidor parado com sucesso![/]")
+    except Exception as e:
+        console.print(f"[bold red]Erro ao parar o servidor: {e}[/]")
+
+def verificar_status():
+    animacao("Verificando status...")
+    try:
+        console.print("[bold cyan]✔ Status: Servidor ATIVO[/]")
+    except Exception as e:
+        console.print(f"[bold red]Erro ao verificar status: {e}[/]")
+
+# ======================
+# LOOP PRINCIPAL
+# ======================
+
+def iniciar_sistema():
     while True:
-        # Limpar o terminal antes de exibir o menu
-        os.system("cls" if os.name == "nt" else "clear")
-        
+        limpar_tela()
         exibir_menu()
-        
-        # Exibir o texto do prompt com estilo "bold yellow"
-        console.print("Digite o número da opção", style="bold yellow", end=" ")
-        
-        # Capturar a escolha do usuário
-        escolha = Prompt.ask(choices=["1", "2", "3", "4"])
+
+        escolha = Prompt.ask(
+            "\n[bold yellow]Digite uma opção[/]", 
+            choices=["1", "2", "3", "4"]
+        )
 
         if escolha == "1":
             iniciar_servidor()
@@ -76,13 +101,11 @@ def iniciar_sistema():
         elif escolha == "3":
             verificar_status()
         elif escolha == "4":
-            print("\n")
-            console.print("[bold yellow]Saindo...[/]")
-            print("\n")
-            time.sleep(1.5)
-            os.system("cls" if os.name == "nt" else "clear")
+            animacao("Encerrando sistema...")
+            console.print("[bold yellow]Até logo 👋[/]")
+            time.sleep(1)
             break
 
-        # Pausa antes de retornar ao menu
-        console.print("\n[bold]Pressione Enter para continuar...[/]", style="bold yellow")
+        console.print("\nPressione Enter para voltar ao menu...", style="bold yellow")
         input()
+
